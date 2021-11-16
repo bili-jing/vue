@@ -22,6 +22,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // config
   const configDef = {}
   configDef.get = () => config
+  //如果是开发环境，不要替换Vue.config对象，而是设置单个字段
   if (process.env.NODE_ENV !== 'production') {
     configDef.set = () => {
       warn(
@@ -29,6 +30,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
       )
     }
   }
+  //初始化config配置参数
   Object.defineProperty(Vue, 'config', configDef)
 
   // exposed util methods.
@@ -51,7 +53,10 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     return obj
   }
 
+  // 初始化options选项
   Vue.options = Object.create(null)
+  // 注册全局components/filters/directives指令收集池
+  // 如Vue.component/filter/directive('id',definition) 会被收集倒Vue.components[id]中 
   ASSET_TYPES.forEach(type => {
     Vue.options[type + 's'] = Object.create(null)
   })
@@ -60,6 +65,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // components with in Weex's multi-instance scenarios.
   Vue.options._base = Vue
 
+  //注册keep-alive全局组件
   extend(Vue.options.components, builtInComponents)
 
   initUse(Vue)

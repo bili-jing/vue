@@ -19,6 +19,7 @@ Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+  //判断 el 是否存在,即选择器。如果存在则交给query函数处理
   el = el && query(el)
 
   /* istanbul ignore if */
@@ -31,6 +32,7 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // 如果没有设置render函数，则判将template转换成 render 函数
   if (!options.render) {
     let template = options.template
     if (template) {
