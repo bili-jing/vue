@@ -68,6 +68,7 @@ export function renderMixin (Vue: Class<Component>) {
 
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
+    //render为注册时传入的render函数
     const { render, _parentVnode } = vm.$options
 
     if (_parentVnode) {

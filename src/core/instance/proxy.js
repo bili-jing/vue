@@ -76,6 +76,7 @@ if (process.env.NODE_ENV !== 'production') {
   }
 
   initProxy = function initProxy (vm) {
+    //如果环境支持Proxy
     if (hasProxy) {
       // determine which proxy handler to use
       const options = vm.$options
@@ -84,6 +85,7 @@ if (process.env.NODE_ENV !== 'production') {
         : hasHandler
       vm._renderProxy = new Proxy(vm, handlers)
     } else {
+      //不支持Proxy则直接复制Vue实例
       vm._renderProxy = vm
     }
   }

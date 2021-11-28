@@ -36,6 +36,7 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+//对数据进行代理
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -110,11 +111,13 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
+//初始化数据状态
 function initData (vm: Component) {
   let data = vm.$options.data
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
+  //data必须为函数，并且返回一个对象。如果不是，则在开发环境中警告data函数必须返回一个对象
   if (!isPlainObject(data)) {
     data = {}
     process.env.NODE_ENV !== 'production' && warn(
@@ -123,11 +126,15 @@ function initData (vm: Component) {
       vm
     )
   }
+  //取出data中的key
   // proxy data on instance
   const keys = Object.keys(data)
+  // props参数数据
   const props = vm.$options.props
+  //methods中定义的函数
   const methods = vm.$options.methods
   let i = keys.length
+  //遍历data中所有的key，并且判断是否在props，methods中存在同名的属性名。如果存在，则在开发环境中提示参数已存在于props/methods中了。
   while (i--) {
     const key = keys[i]
     if (process.env.NODE_ENV !== 'production') {
@@ -144,10 +151,11 @@ function initData (vm: Component) {
         `Use prop default value instead.`,
         vm
       )
-    } else if (!isReserved(key)) {
+    } else if (!isReserved(key)) { //判断是否为key是否为 _(私有) 或者 $(公有) 开头,如果不是，则进行数据劫持
       proxy(vm, `_data`, key)
     }
   }
+  //响应式数据
   // observe data
   observe(data, true /* asRootData */)
 }

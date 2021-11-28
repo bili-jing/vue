@@ -43,7 +43,9 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
+    //在数据上定义__ob__属性，赋值为Observer实例
     def(value, '__ob__', this)
+    //如果是数组
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods)
@@ -52,6 +54,7 @@ export class Observer {
       }
       this.observeArray(value)
     } else {
+      //如果是对象
       this.walk(value)
     }
   }
@@ -62,6 +65,7 @@ export class Observer {
    * value type is Object.
    */
   walk (obj: Object) {
+    //遍历对象的所有属性，并且定义为响应式(getter/setter)的数据
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length; i++) {
       defineReactive(obj, keys[i])
@@ -108,24 +112,35 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * or the existing observer if the value already has one.
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
+  //如果不是对应或者是 Vnode 实例，则不做处理
   if (!isObject(value) || value instanceof VNode) {
     return
   }
+  //声明一个ob属性，用于存储Observe实例
   let ob: Observer | void
+  //如果数据上存在__ob__属性并且属于Observe类的实例，则将ob属性赋值为value.__ob__
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__
-  } else if (
+  } else if (//否则
+    //如果是可以操作为响应式的数据
     shouldObserve &&
+    //不是服务端渲染
     !isServerRendering() &&
+    //如果是数组或者是对象
     (Array.isArray(value) || isPlainObject(value)) &&
+    //此数据是可拓展（即可以为他们添加新的属性）并且不是Vue实例
     Object.isExtensible(value) &&
     !value._isVue
   ) {
+    //如果不存在__ob__属性，并且可以做操作为响应式数据时
+    //初始化Observer实例并且赋值给ob
     ob = new Observer(value)
   }
+  //如果是根数据且存在ob实例存在,让计数器++
   if (asRootData && ob) {
     ob.vmCount++
   }
+  //返回Observer实例
   return ob
 }
 
@@ -139,25 +154,31 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  //初始化依赖收集器
   const dep = new Dep()
-
+  //获取obj[key]的属性描述符
   const property = Object.getOwnPropertyDescriptor(obj, key)
+  // 如果属性描述符存在并且不可配置，则直接跳出 (Object.freszz等冻结方法会导致数据不会响应)
   if (property && property.configurable === false) {
     return
   }
 
   // cater for pre-defined getter/setters
+  //如果用户设置了getter和setter
   const getter = property && property.get
   const setter = property && property.set
+  //如果getter不存在，或者setter存在。且没有传入val参数,将val赋值为obj[key]
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
-
+  //如果不是浅监听，则调用递归调用observe处理对象类型数据
   let childOb = !shallow && observe(val)
+  //将数据添加getter/setter
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
+      //如果用户自定义了getter方法，则调用getter方法并将返回值赋值给value。否则直接赋值数据
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
         dep.depend()
@@ -171,12 +192,15 @@ export function defineReactive (
       return value
     },
     set: function reactiveSetter (newVal) {
+      //获取数据
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
+      //如果新值和旧值一样，或者是null，则直接return掉
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
       /* eslint-enable no-self-compare */
+      //如果是开发环境并且用户自定义了setting
       if (process.env.NODE_ENV !== 'production' && customSetter) {
         customSetter()
       }
@@ -187,7 +211,9 @@ export function defineReactive (
       } else {
         val = newVal
       }
+      //如果设置值是对象，则对对象进行递归响应
       childOb = !shallow && observe(newVal)
+      //派发更新
       dep.notify()
     }
   })
