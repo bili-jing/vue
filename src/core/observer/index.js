@@ -273,15 +273,20 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
  */
 export function del (target: Array<any> | Object, key: any) {
   if (process.env.NODE_ENV !== 'production' &&
+  //判断是否是undefined/null 或者 是否是原始类型string/number/symbol/boolean
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  //如果删除的对象是数组，并且设置的索引（key）在有效的取值范围内
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    //则调用 splice 删除数据
     target.splice(key, 1)
     return
   }
+  //获取属性上__ob__属性，__ob__为属性的响应式对象实例,在new Observer时候会为属性添加此属性
   const ob = (target: any).__ob__
+  //如果delete的对象是Vue实例或者是根对象$data,则在开发环境中提示警告
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid deleting properties on a Vue instance or its root $data ' +
@@ -289,13 +294,17 @@ export function del (target: Array<any> | Object, key: any) {
     )
     return
   }
+  //如果要删除的属性不在对象和原型身上，则直接退出处理
   if (!hasOwn(target, key)) {
     return
   }
+  //删除对象上的属性
   delete target[key]
+  //如果不是响应式对象，直接退出
   if (!ob) {
     return
   }
+  //如果是响应式对象，通知对象收集的依赖更新
   ob.dep.notify()
 }
 
