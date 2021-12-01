@@ -226,20 +226,29 @@ export function defineReactive (
  */
 export function set (target: Array<any> | Object, key: any, val: any): any {
   if (process.env.NODE_ENV !== 'production' &&
+  //判断是否是undefined/null 或者 是否是原始类型string/number/symbol/boolean
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  //如果设置的对象是数组，并且设置的索引（key）在有效的取值范围内
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    //设置数组的长度为 key和target长度中最大的一个
     target.length = Math.max(target.length, key)
+    //调用数组的splice方法为数组添加数据(注意：此splice方法是Vue自己实现的方法,查看:observer/array.js)
     target.splice(key, 1, val)
+    //并且返回
     return val
   }
+  //如果是对象，新增的属性已经存在对象上，并且不在对象的原型上
   if (key in target && !(key in Object.prototype)) {
+    //说明已经是属性已经是响应式的了，直接赋值
     target[key] = val
     return val
   }
+  //获取属性上__ob__属性，__ob__为属性的响应式对象实例,在new Observer时候会为属性添加此属性
   const ob = (target: any).__ob__
+  //如果set的对象是Vue实例或者是根对象$data,则在开发环境中提示警告
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
@@ -247,11 +256,14 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+  //如果ob属性不存在，说明不是响应式数据，直接赋值并且返回
   if (!ob) {
     target[key] = val
     return val
   }
+  //为ob.value (就是target)，设置一个响应式属性key
   defineReactive(ob.value, key, val)
+  //派发已收集依赖更新
   ob.dep.notify()
   return val
 }
