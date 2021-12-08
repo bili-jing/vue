@@ -29,9 +29,10 @@ export function simpleNormalizeChildren (children: any) {
 // with hand-written render functions / JSX. In such cases a full normalization
 // is needed to cater to all possible types of children values.
 export function normalizeChildren (children: any): ?Array<VNode> {
+  //如果children为基础类型，则创建一个文本Vnode,并且返回一个数组
   return isPrimitive(children)
     ? [createTextVNode(children)]
-    : Array.isArray(children)
+    : Array.isArray(children) //如果是数组形式
       ? normalizeArrayChildren(children)
       : undefined
 }
@@ -40,6 +41,7 @@ function isTextNode (node): boolean {
   return isDef(node) && isDef(node.text) && isFalse(node.isComment)
 }
 
+//递归处理Children
 function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNode> {
   const res = []
   let i, c, lastIndex, last
